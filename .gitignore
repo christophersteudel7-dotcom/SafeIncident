@@ -1,0 +1,16 @@
+# Credenciais do banco
+api/config/database.php
+
+# Scripts temporários
+api/teste.php
+api/criar-usuario-teste.php
+
+# Uploads (caso anexos entrem no futuro)
+public/uploads/
+
+# Sistema e editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
