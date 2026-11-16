@@ -1,0 +1,79 @@
+:root {
+    --fundo: #0F1620;
+    --superficie: #161F2C;
+    --borda: #243041;
+    --texto: #E7ECF2;
+    --texto-suave: #8B98A9;
+    --primaria: #2FA97A;
+    --primaria-hover: #278F68;
+    --erro: #D8555A;
+    --raio: 8px;
+  }
+  
+  * { box-sizing: border-box; }
+  
+  [hidden] { display: none !important; }
+  
+  body {
+    margin: 0;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--fundo);
+    color: var(--texto);
+  }
+  
+  /* ---------- Botões ---------- */
+  .btn {
+    padding: 10px 16px;
+    border-radius: var(--raio);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .btn-primario { background: var(--primaria); color: #fff; }
+  .btn-primario:hover { background: var(--primaria-hover); }
+  .btn-primario:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-secundario { background: transparent; color: var(--texto); border-color: var(--borda); }
+  .btn-secundario:hover { background: var(--superficie); }
+  
+  /* ---------- Login ---------- */
+  .pagina-login {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  
+  .login-card {
+    width: 100%;
+    max-width: 400px;
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+    padding: 32px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+  
+  .login-card h1 { margin: 0 0 4px; font-size: 24px; }
+  .login-card .subtitulo { margin: 0 0 24px; color: var(--texto-suave); font-size: 14px; }
+  
+  .login-card label { display: block; margin: 16px 0 6px; font-size: 14px; color: var(--texto-suave); }
+  
+  .login-card input {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--fundo);
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+    color: var(--texto);
+    font-size: 15px;
+  }
+  .login-card input:focus { outline: none; border-color: var(--primaria); }
+  
+  .login-card .btn { width: 100%; margin-top: 24px; }
+  
+  .mensagem-erro { margin: 16px 0 0; color: var(--erro); font-size: 14px; }
+  
+  /* ---------- Dashboard provisório ---------- */
+  .placeholder { max-width: 600px; margin: 64px auto; padding: 0 16px; }
