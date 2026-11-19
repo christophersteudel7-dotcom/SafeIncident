@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalhes do incidente | SafeIncident</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="app carregando" data-pagina="incidentes">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="conteudo">
+    <header class="pagina-cabecalho cabecalho-linha">
+      <div>
+        <h1>Detalhes do incidente</h1>
+        <p><a href="incidentes.html">Voltar para incidentes</a></p>
+      </div>
+      <div class="acoes-form" id="acoes-topo" hidden>
+        <a class="btn btn-secundario" id="btn-editar" href="#">Editar</a>
+        <button type="button" class="btn btn-perigo" id="btn-excluir">Excluir</button>
+      </div>
+    </header>
+
+    <div id="carregando" class="estado"><div class="spinner"></div>Carregando incidente...</div>
+    <div id="erro" class="card" hidden></div>
+
+    <div id="conteudo-detalhes" class="empilhar" hidden>
+      <section class="card">
+        <h2 id="det-titulo" style="font-size:20px;margin-bottom:12px;"></h2>
+        <div class="barra-status" style="margin-bottom:20px;">
+          <span id="det-prioridade"></span>
+          <span id="det-status"></span>
+        </div>
+
+        <div class="detalhes-grade">
+          <div class="dado"><p class="rotulo-dado">Tipo de ataque</p><p class="valor-dado" id="det-tipo"></p></div>
+          <div class="dado"><p class="rotulo-dado">Sistema afetado</p><p class="valor-dado" id="det-sistema"></p></div>
+          <div class="dado"><p class="rotulo-dado">Data da ocorrência</p><p class="valor-dado" id="det-ocorrencia"></p></div>
+          <div class="dado"><p class="rotulo-dado">Registrado por</p><p class="valor-dado" id="det-registrado"></p></div>
+          <div class="dado"><p class="rotulo-dado">Registrado em</p><p class="valor-dado" id="det-criacao"></p></div>
+          <div class="dado"><p class="rotulo-dado">Resolvido em</p><p class="valor-dado" id="det-resolucao"></p></div>
+        </div>
+
+        <div class="dado">
+          <p class="rotulo-dado">Descrição</p>
+          <p class="descricao-texto" id="det-descricao"></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Alterar status</h2>
+        <div class="barra-status">
+          <select id="novo-status" aria-label="Novo status">
+            <option value="Pendente">Pendente</option>
+            <option value="Em andamento">Em andamento</option>
+            <option value="Resolvido">Resolvido</option>
+          </select>
+          <button type="button" class="btn btn-primario" id="btn-status">Atualizar status</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="js/utils.js"></script>
+  <script src="js/incidente-detalhes.js"></script>
+  <script src="js/layout.js"></script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatórios | SafeIncident</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="app carregando" data-pagina="relatorios">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="conteudo">
+    <header class="pagina-cabecalho">
+      <h1>Relatórios</h1>
+      <p>Analise os incidentes aplicando filtros. Resumo, gráficos e tabela usam o mesmo conjunto de registros.</p>
+    </header>
+
+    <form id="form-filtros" class="card" style="margin-bottom:16px;">
+      <div class="filtros">
+        <div>
+          <label for="f-tipo">Tipo de ataque</label>
+          <select id="f-tipo"><option value="">Todos</option></select>
+        </div>
+        <div>
+          <label for="f-sistema">Sistema afetado</label>
+          <select id="f-sistema"><option value="">Todos</option></select>
+        </div>
+        <div>
+          <label for="f-status">Status</label>
+          <select id="f-status">
+            <option value="">Todos</option>
+            <option value="Pendente">Pendente</option>
+            <option value="Em andamento">Em andamento</option>
+            <option value="Resolvido">Resolvido</option>
+          </select>
+        </div>
+        <div>
+          <label for="f-prioridade">Prioridade</label>
+          <select id="f-prioridade">
+            <option value="">Todas</option>
+            <option value="Baixa">Baixa</option>
+            <option value="Media">Média</option>
+            <option value="Alta">Alta</option>
+            <option value="Critica">Crítica</option>
+          </select>
+        </div>
+        <div>
+          <label for="f-inicio">Ocorrência a partir de</label>
+          <input type="date" id="f-inicio">
+        </div>
+        <div>
+          <label for="f-fim">Ocorrência até</label>
+          <input type="date" id="f-fim">
+        </div>
+        <div class="acoes">
+          <button type="submit" class="btn btn-primario" id="btn-gerar">Gerar relatório</button>
+          <button type="button" class="btn btn-secundario" id="btn-limpar">Limpar</button>
+        </div>
+      </div>
+      <p class="erro-campo" id="erro-filtros" hidden></p>
+    </form>
+
+    <div id="carregando" class="estado"><div class="spinner"></div>Gerando relatório...</div>
+    <div id="erro" class="card" hidden></div>
+    <div id="vazio" class="card" hidden></div>
+
+    <div id="resultado" hidden>
+      <section class="grade-indicadores">
+        <div class="card indicador"><p class="valor" id="res-total">0</p><p class="nome">Incidentes no filtro</p></div>
+        <div class="card indicador"><p class="valor" id="res-abertos">0</p><p class="nome">Em aberto</p></div>
+        <div class="card indicador"><p class="valor" id="res-resolvidos">0</p><p class="nome">Resolvidos</p></div>
+        <div class="card indicador destaque"><p class="valor" id="res-tempo">—</p><p class="nome">Tempo médio de resolução</p></div>
+      </section>
+
+      <section class="grade-graficos">
+        <div class="card"><h2>Por tipo de ataque</h2><div class="area-grafico"><canvas id="g-tipo"></canvas></div></div>
+        <div class="card"><h2>Por status</h2><div class="area-grafico"><canvas id="g-status"></canvas></div></div>
+        <div class="card"><h2>Por prioridade</h2><div class="area-grafico"><canvas id="g-prioridade"></canvas></div></div>
+        <div class="card"><h2>Por sistema afetado</h2><div class="area-grafico"><canvas id="g-sistema"></canvas></div></div>
+        <div class="card"><h2>Incidentes por mês</h2><div class="area-grafico"><canvas id="g-mes"></canvas></div></div>
+      </section>
+
+      <section class="card">
+        <div class="cabecalho-linha" style="margin-bottom:12px;">
+          <h2 style="margin:0;">Resultados</h2>
+          <button type="button" class="btn btn-secundario btn-pequeno" id="btn-csv">Exportar CSV</button>
+        </div>
+        <div class="tabela-container">
+          <table>
+            <thead>
+              <tr><th>Título</th><th>Tipo</th><th>Sistema</th><th>Prioridade</th><th>Status</th><th>Ocorrência</th><th>Resolvido em</th></tr>
+            </thead>
+            <tbody id="corpo-resultados"></tbody>
+          </table>
+        </div>
+        <p class="texto-suave" id="aviso-limite" style="margin-top:12px;font-size:13px;" hidden></p>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/relatorios.js"></script>
+  <script src="js/layout.js"></script>
+</body>
+</html>

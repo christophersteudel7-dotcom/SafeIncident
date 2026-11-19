@@ -6,12 +6,54 @@
   <title>Dashboard | SafeIncident</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
-  <main class="placeholder">
-    <h1>Dashboard</h1>
-    <p id="boas-vindas">Carregando...</p>
-    <button id="btn-sair" class="btn btn-secundario">Sair</button>
+<body class="app carregando" data-pagina="dashboard">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="conteudo">
+    <header class="pagina-cabecalho">
+      <h1>Dashboard</h1>
+      <p>Situação atual dos incidentes de segurança</p>
+    </header>
+
+    <div id="carregando" class="estado"><div class="spinner"></div>Carregando indicadores...</div>
+    <div id="erro" class="card" hidden></div>
+    <div id="vazio" class="card" hidden>
+      <div class="estado">
+        <strong>Nenhum incidente cadastrado ainda</strong>
+        <span>Registre o primeiro incidente para ver os indicadores e gráficos.</span><br>
+        <a class="btn btn-primario" href="incidente-form.html">Cadastrar incidente</a>
+      </div>
+    </div>
+
+    <div id="conteudo-dashboard" hidden>
+      <section class="grade-indicadores">
+        <div class="card indicador"><p class="valor" id="ind-total">0</p><p class="nome">Total de incidentes</p></div>
+        <div class="card indicador"><p class="valor" id="ind-abertos">0</p><p class="nome">Em aberto (pendentes e em andamento)</p></div>
+        <div class="card indicador"><p class="valor" id="ind-resolvidos">0</p><p class="nome">Resolvidos</p></div>
+        <div class="card indicador destaque"><p class="valor" id="ind-tempo">—</p><p class="nome">Tempo médio de resolução</p></div>
+      </section>
+
+      <section class="grade-graficos">
+        <div class="card">
+          <h2>Incidentes por tipo de ataque</h2>
+          <div class="area-grafico"><canvas id="grafico-tipo"></canvas></div>
+        </div>
+        <div class="card">
+          <h2>Incidentes por prioridade</h2>
+          <div class="area-grafico"><canvas id="grafico-prioridade"></canvas></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Incidentes recentes</h2>
+        <ul class="lista-recentes" id="lista-recentes"></ul>
+      </section>
+    </div>
   </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="js/utils.js"></script>
   <script src="js/dashboard.js"></script>
+  <script src="js/layout.js"></script>
 </body>
 </html>

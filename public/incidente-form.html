@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Incidente | SafeIncident</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="app carregando" data-pagina="incidentes">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="conteudo">
+    <header class="pagina-cabecalho">
+      <h1 id="titulo-pagina">Novo incidente</h1>
+      <p id="subtitulo-pagina">Registre um incidente de segurança da informação</p>
+    </header>
+
+    <div id="carregando" class="estado" hidden><div class="spinner"></div>Carregando incidente...</div>
+    <div id="erro" class="card" hidden></div>
+
+    <form id="form-incidente" class="card form-card" novalidate>
+      <div class="campo" data-campo="titulo">
+        <label for="titulo">Título</label>
+        <input type="text" id="titulo" maxlength="150" autocomplete="off">
+        <p class="erro-campo" hidden></p>
+      </div>
+
+      <div class="grade-form">
+        <div class="campo" data-campo="id_tipo">
+          <label for="id_tipo">Tipo de ataque</label>
+          <select id="id_tipo"><option value="">Selecione...</option></select>
+          <p class="erro-campo" hidden></p>
+        </div>
+        <div class="campo" data-campo="prioridade">
+          <label for="prioridade">Prioridade</label>
+          <select id="prioridade">
+            <option value="">Selecione...</option>
+            <option value="Baixa">Baixa</option>
+            <option value="Media">Média</option>
+            <option value="Alta">Alta</option>
+            <option value="Critica">Crítica</option>
+          </select>
+          <p class="erro-campo" hidden></p>
+        </div>
+        <div class="campo" data-campo="sistema_afetado">
+          <label for="sistema_afetado">Sistema afetado</label>
+          <input type="text" id="sistema_afetado" maxlength="100" autocomplete="off">
+          <p class="erro-campo" hidden></p>
+        </div>
+        <div class="campo" data-campo="data_ocorrencia">
+          <label for="data_ocorrencia">Data da ocorrência</label>
+          <input type="date" id="data_ocorrencia">
+          <p class="erro-campo" hidden></p>
+        </div>
+      </div>
+
+      <div class="campo" data-campo="descricao">
+        <label for="descricao">Descrição</label>
+        <textarea id="descricao" maxlength="5000"></textarea>
+        <p class="erro-campo" hidden></p>
+      </div>
+
+      <div class="campo" id="bloco-status" hidden>
+        <label>Status atual</label>
+        <div id="status-atual"></div>
+        <p class="texto-suave" style="margin-top:6px;font-size:13px;">O status é alterado na tela de detalhes do incidente.</p>
+      </div>
+
+      <div class="acoes-form">
+        <button type="submit" id="btn-salvar" class="btn btn-primario">Salvar incidente</button>
+        <a class="btn btn-secundario" href="incidentes.html">Cancelar</a>
+      </div>
+    </form>
+  </main>
+
+  <script src="js/utils.js"></script>
+  <script src="js/incidente-form.js"></script>
+  <script src="js/layout.js"></script>
+</body>
+</html>

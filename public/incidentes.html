@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Incidentes | SafeIncident</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="app carregando" data-pagina="incidentes">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="conteudo">
+    <header class="pagina-cabecalho cabecalho-linha">
+      <div>
+        <h1>Incidentes</h1>
+        <p>Cadastro, consulta e acompanhamento</p>
+      </div>
+      <a class="btn btn-primario" href="incidente-form.html">Novo incidente</a>
+    </header>
+
+    <section class="card">
+      <input type="search" id="busca" class="barra-busca" placeholder="Buscar por título, descrição ou sistema afetado" aria-label="Buscar incidentes">
+
+      <div class="filtros">
+        <div>
+          <label for="filtro-tipo">Tipo de ataque</label>
+          <select id="filtro-tipo"><option value="">Todos</option></select>
+        </div>
+        <div>
+          <label for="filtro-prioridade">Prioridade</label>
+          <select id="filtro-prioridade">
+            <option value="">Todas</option>
+            <option value="Baixa">Baixa</option>
+            <option value="Media">Média</option>
+            <option value="Alta">Alta</option>
+            <option value="Critica">Crítica</option>
+          </select>
+        </div>
+        <div>
+          <label for="filtro-status">Status</label>
+          <select id="filtro-status">
+            <option value="">Todos</option>
+            <option value="Pendente">Pendente</option>
+            <option value="Em andamento">Em andamento</option>
+            <option value="Resolvido">Resolvido</option>
+          </select>
+        </div>
+        <div class="acoes"><button type="button" id="btn-limpar" class="btn btn-secundario">Limpar filtros</button></div>
+      </div>
+
+      <div id="carregando" class="estado"><div class="spinner"></div>Carregando incidentes...</div>
+      <div id="erro" hidden></div>
+      <div id="vazio" hidden></div>
+
+      <div id="area-tabela" hidden>
+        <div class="tabela-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Título</th><th>Tipo</th><th>Sistema</th><th>Prioridade</th><th>Status</th><th>Ocorrência</th><th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="corpo-tabela"></tbody>
+          </table>
+        </div>
+        <div class="paginacao">
+          <span class="texto-suave" id="info-paginacao"></span>
+          <div class="botoes">
+            <button type="button" id="btn-anterior" class="btn btn-secundario btn-pequeno">Anterior</button>
+            <button type="button" id="btn-proxima" class="btn btn-secundario btn-pequeno">Próxima</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/utils.js"></script>
+  <script src="js/incidentes.js"></script>
+  <script src="js/layout.js"></script>
+</body>
+</html>

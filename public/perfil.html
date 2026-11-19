@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfil | SafeIncident</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="app carregando" data-pagina="perfil">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="conteudo">
+    <header class="pagina-cabecalho">
+      <h1>Perfil</h1>
+      <p>Seus dados de usuário</p>
+    </header>
+
+    <div id="carregando" class="estado"><div class="spinner"></div>Carregando perfil...</div>
+    <div id="erro" class="card" hidden></div>
+
+    <section class="card form-card" id="card-perfil" hidden>
+      <div class="perfil-topo">
+        <span class="avatar avatar-grande" id="perfil-avatar"></span>
+        <div>
+          <h2 id="perfil-nome"></h2>
+          <p class="texto-suave">Profissional autorizado</p>
+        </div>
+      </div>
+      <div class="detalhes-grade">
+        <div class="dado"><p class="rotulo-dado">E-mail</p><p class="valor-dado" id="perfil-email"></p></div>
+        <div class="dado"><p class="rotulo-dado">Departamento</p><p class="valor-dado" id="perfil-departamento"></p></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/utils.js"></script>
+  <script src="js/perfil.js"></script>
+  <script src="js/layout.js"></script>
+</body>
+</html>
