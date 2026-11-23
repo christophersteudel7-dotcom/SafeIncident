@@ -21,20 +21,70 @@ const ITENS_MENU = [
   { id: 'perfil',     rotulo: 'Perfil',     href: 'perfil.html' }
 ];
 
+// A consulta automática confere se outra aba manteve a sessão. Só o uso real renova o prazo.
+function acompanharInatividade(segundosIniciais) {
+  // Uma instalação atualizada por etapas ainda pode responder somente com o nome.
+  if (!Number.isFinite(segundosIniciais)) return;
+  let timerPrazo;
+  let envioPendente = null;
+  let proximoEnvio = 0;
+  // Agrupa eventos próximos para não chamar o PHP a cada tecla.
+  const intervalo = Math.min(10000, Math.max(1, segundosIniciais) * 250);
+
+  function agendarVerificacao(segundos) {
+    clearTimeout(timerPrazo);
+    timerPrazo = setTimeout(() => consultar(true), Math.max(1, segundos) * 1000);
+  }
+
+  async function consultar(apenasVerificar) {
+    if (voltandoAoLogin) return;
+    try {
+      const url = '../api/auth/sessao.php' + (apenasVerificar ? '?verificar=1' : '');
+      const sessao = await chamarApi(url, { cache: 'no-store' });
+      agendarVerificacao(sessao.segundos_restantes);
+    } catch (erro) {
+      // O 401 já leva ao login. Uma falha temporária de rede pode ser tentada de novo.
+      if (!voltandoAoLogin) agendarVerificacao(5);
+    }
+  }
+
+  function renovar() {
+    envioPendente = null;
+    proximoEnvio = Date.now() + intervalo;
+    consultar(false);
+  }
+
+  function registrarUso() {
+    if (envioPendente !== null) return;
+    const espera = proximoEnvio - Date.now();
+    if (espera > 0) envioPendente = setTimeout(renovar, espera);
+    else renovar();
+  }
+
+  for (const evento of ['pointerdown', 'pointermove', 'keydown', 'input', 'wheel', 'touchmove']) {
+    document.addEventListener(evento, registrarUso, { passive: true });
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) consultar(true);
+  });
+  window.addEventListener('pageshow', (evento) => {
+    if (evento.persisted) consultar(true);
+  });
+  agendarVerificacao(segundosIniciais);
+}
+
 async function iniciarLayout() {
   // 1. Só continua se houver sessão ativa no servidor
   let usuario;
   try {
-    const resposta = await fetch('../api/auth/sessao.php');
-    if (!resposta.ok) {
-      window.location.href = 'login.html';
-      return;
-    }
-    usuario = await resposta.json();
+    usuario = await chamarApi('../api/auth/sessao.php', { cache: 'no-store' });
   } catch (erro) {
-    window.location.href = 'login.html';
+    voltarAoLogin();
     return;
   }
+
+  if (voltandoAoLogin) return;
+  acompanharInatividade(usuario.segundos_restantes);
 
   // 2. Lembra se o usuário tinha recolhido a sidebar
   if (localStorage.getItem('sidebarRecolhida') === '1') {
@@ -75,8 +125,15 @@ async function iniciarLayout() {
 
   // 6. Botão de sair
   document.getElementById('btn-sair').addEventListener('click', async () => {
-    await fetch('../api/auth/logout.php');
-    window.location.href = 'login.html';
+    try {
+      const resultado = await enviarJson('../api/auth/logout.php', {});
+      if (!resultado || resultado.sucesso !== true) {
+        throw new Error('Saída não confirmada');
+      }
+      voltarAoLogin();
+    } catch (erro) {
+      mostrarToast('Não foi possível confirmar a saída. Tente novamente.', 'erro');
+    }
   });
 
   // 7. Tudo pronto: mostra a página

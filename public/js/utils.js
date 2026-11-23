@@ -6,12 +6,28 @@
 
 // ---------- Comunicação com a API ----------
 
+let voltandoAoLogin = false;
+
+function voltarAoLogin() {
+  if (voltandoAoLogin) return;
+  voltandoAoLogin = true;
+  document.body.classList.add('carregando');
+  window.location.replace('login.html');
+}
+
 // Chama um endpoint e devolve o JSON. Se a sessão expirou (401), volta ao login.
-async function chamarApi(url, opcoes) {
+async function chamarApi(url, opcoes = {}) {
+  // Todas as escritas das telas internas passam aqui, inclusive o logout.
+  if ((opcoes.method || 'GET').toUpperCase() === 'POST') {
+    const headers = new Headers(opcoes.headers);
+    headers.set('Content-Type', 'application/json');
+    headers.set('X-SafeIncident', '1');
+    opcoes = { ...opcoes, headers };
+  }
   const resposta = await fetch(url, opcoes);
 
   if (resposta.status === 401) {
-    window.location.href = 'login.html';
+    voltarAoLogin();
     throw new Error('Sessão expirada');
   }
 
@@ -28,7 +44,6 @@ async function chamarApi(url, opcoes) {
 function enviarJson(url, corpo) {
   return chamarApi(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(corpo)
   });
 }
@@ -89,7 +104,10 @@ function formatarTempo(horas) {
 }
 
 function dataDeHoje() {
-  return new Date().toLocaleDateString('en-CA'); // AAAA-MM-DD no fuso do navegador
+  const hoje = new Date();
+  const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+  const dia = String(hoje.getDate()).padStart(2, '0');
+  return hoje.getFullYear() + '-' + mes + '-' + dia; // Formato do input date no fuso local.
 }
 
 // ---------- Avisos (toast) e confirmação ----------
@@ -154,38 +172,65 @@ const graficos = {}; // guarda os gráficos já criados para poder refazê-los
 
 // tipo: 'bar' ou 'doughnut'. horizontal só vale para barras.
 function desenharGrafico(idCanvas, tipo, rotulos, valores, cores, horizontal) {
-  if (graficos[idCanvas]) graficos[idCanvas].destroy(); // evita um gráfico sobre o outro
+  const canvas = document.getElementById(idCanvas);
+  const area = canvas.parentElement;
+  let aviso = document.getElementById(idCanvas + '-alternativa');
 
-  Chart.defaults.color = '#8B98A9';
-  Chart.defaults.borderColor = '#243041';
-  Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
-
-  const opcoes = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: tipo === 'doughnut', position: 'bottom' } }
-  };
-
-  if (tipo === 'bar') {
-    const eixoValores = { beginAtZero: true, ticks: { precision: 0 } };
-    const eixoCategorias = { grid: { display: false } };
-    opcoes.indexAxis = horizontal ? 'y' : 'x';
-    opcoes.scales = horizontal ? { x: eixoValores, y: eixoCategorias } : { x: eixoCategorias, y: eixoValores };
+  function mostrarValores() {
+    area.hidden = true;
+    if (!aviso) {
+      aviso = el('p', 'texto-suave');
+      aviso.id = idCanvas + '-alternativa';
+      area.after(aviso);
+    }
+    const itens = rotulos.map((rotulo, i) => rotulo + ': ' + valores[i]);
+    aviso.textContent = 'Gráfico indisponível. ' + (itens.join(' · ') || 'Nenhum dado.');
   }
 
-  graficos[idCanvas] = new Chart(document.getElementById(idCanvas), {
-    type: tipo,
-    data: {
-      labels: rotulos,
-      datasets: [{
-        data: valores,
-        backgroundColor: cores,
-        borderWidth: 0,
-        borderRadius: tipo === 'bar' ? 4 : 0
-      }]
-    },
-    options: opcoes
-  });
+  if (typeof Chart !== 'function') {
+    mostrarValores();
+    return;
+  }
+
+  try {
+    area.hidden = false;
+    if (graficos[idCanvas]) graficos[idCanvas].destroy();
+
+    Chart.defaults.color = '#8B98A9';
+    Chart.defaults.borderColor = '#243041';
+    Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+
+    const opcoes = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: tipo === 'doughnut', position: 'bottom' } }
+    };
+
+    if (tipo === 'bar') {
+      const eixoValores = { beginAtZero: true, ticks: { precision: 0 } };
+      const eixoCategorias = { grid: { display: false } };
+      opcoes.indexAxis = horizontal ? 'y' : 'x';
+      opcoes.scales = horizontal ? { x: eixoValores, y: eixoCategorias } : { x: eixoCategorias, y: eixoValores };
+    }
+
+    graficos[idCanvas] = new Chart(canvas, {
+      type: tipo,
+      data: {
+        labels: rotulos,
+        datasets: [{
+          data: valores,
+          backgroundColor: cores,
+          borderWidth: 0,
+          borderRadius: tipo === 'bar' ? 4 : 0
+        }]
+      },
+      options: opcoes
+    });
+    if (aviso) aviso.remove();
+  } catch (erro) {
+    // Se o navegador falhar ao desenhar, os demais dados da página continuam disponíveis.
+    mostrarValores();
+  }
 }
 
 // ---------- Estados vazios ----------

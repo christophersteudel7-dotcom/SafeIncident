@@ -1,5 +1,4 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../helpers/util.php';
 
 exigirLogin();
@@ -8,6 +7,7 @@ exigirMetodo('GET');
 try {
     // Os filtros escolhidos na tela valem para TUDO abaixo: resumo, tabela e gráficos
     [$where, $valores] = montarFiltros($_GET);
+    $pdo = conectarBanco();
 
     $sql = "SELECT i.id_incidente, i.titulo, t.nome AS tipo, i.sistema_afetado, i.prioridade,
                    i.status, i.data_ocorrencia, i.data_resolucao

@@ -1,9 +1,13 @@
 // Relatórios: o usuário escolhe os filtros, o PHP consulta o banco com eles
-// e devolve resumo + lista + dados dos gráficos (tudo do MESMO conjunto filtrado).
+// Resumo e gráficos contam todos os filtrados. A tabela e o CSV trazem até 1.000 linhas.
 
 const form = document.getElementById('form-filtros');
 const erroFiltros = document.getElementById('erro-filtros');
+const botaoCsv = document.getElementById('btn-csv');
+const botaoGerar = document.getElementById('btn-gerar');
+const instrucaoFiltros = document.getElementById('instrucao-filtros');
 let ultimoResultado = null;
+let filtrosDoResultado = '';
 let numeroDaConsulta = 0;
 
 function mostrarArea(nome) {
@@ -49,7 +53,24 @@ function lerFiltros() {
   return params;
 }
 
+function invalidarResultado() {
+  // Uma resposta antiga perde a vez, mesmo que a nova consulta ainda não tenha começado.
+  ++numeroDaConsulta;
+  ultimoResultado = null;
+  filtrosDoResultado = '';
+  botaoCsv.disabled = true;
+  botaoCsv.textContent = 'Exportar CSV (0 linhas)';
+  botaoGerar.disabled = false;
+  erroFiltros.hidden = true;
+  instrucaoFiltros.hidden = false;
+  mostrarArea('aguardando');
+}
+
 async function gerarRelatorio() {
+  invalidarResultado();
+  instrucaoFiltros.hidden = true;
+  const minhaConsulta = numeroDaConsulta;
+  const filtros = lerFiltros().toString();
   const inicio = document.getElementById('f-inicio').value;
   const fim = document.getElementById('f-fim').value;
   if (inicio && fim && inicio > fim) {
@@ -57,16 +78,16 @@ async function gerarRelatorio() {
     erroFiltros.hidden = false;
     return;
   }
-  erroFiltros.hidden = true;
-
-  const minhaConsulta = ++numeroDaConsulta;
   mostrarArea('carregando');
-  document.getElementById('btn-gerar').disabled = true;
+  botaoGerar.disabled = true;
 
   try {
-    const r = await chamarApi('../api/relatorios/gerar.php?' + lerFiltros().toString());
+    const r = await chamarApi('../api/relatorios/gerar.php?' + filtros);
     if (minhaConsulta !== numeroDaConsulta) return;
-    ultimoResultado = r;
+    if (filtros !== lerFiltros().toString()) {
+      invalidarResultado();
+      return;
+    }
 
     if (r.resumo.total === 0) {
       const caixa = document.getElementById('vazio');
@@ -78,8 +99,13 @@ async function gerarRelatorio() {
 
     mostrarArea('resultado'); // mostra antes de desenhar, para o Chart.js medir o tamanho
     desenharResumo(r.resumo);
-    desenharGraficos(r);
     desenharTabela(r);
+    desenharGraficos(r);
+    ultimoResultado = r;
+    filtrosDoResultado = filtros;
+    const linhas = r.dados.length;
+    botaoCsv.textContent = 'Exportar CSV (' + linhas + (linhas === 1 ? ' linha)' : ' linhas)');
+    botaoCsv.disabled = linhas === 0;
   } catch (erro) {
     if (minhaConsulta !== numeroDaConsulta) return;
     const caixa = document.getElementById('erro');
@@ -87,7 +113,7 @@ async function gerarRelatorio() {
     caixa.appendChild(criarEstado('Não foi possível gerar o relatório', erro.message, 'estado-erro'));
     mostrarArea('erro');
   } finally {
-    document.getElementById('btn-gerar').disabled = false;
+    if (minhaConsulta === numeroDaConsulta) botaoGerar.disabled = false;
   }
 }
 
@@ -144,7 +170,7 @@ function desenharTabela(r) {
 
   const aviso = document.getElementById('aviso-limite');
   if (r.resumo.total > r.dados.length) {
-    aviso.textContent = 'Mostrando os ' + r.dados.length + ' incidentes mais recentes de ' + r.resumo.total + '. Use os filtros para refinar.';
+    aviso.textContent = 'A tabela e o CSV contêm os ' + r.dados.length + ' incidentes mais recentes de um total de ' + r.resumo.total + '. Refine os filtros para reduzir o resultado.';
     aviso.hidden = false;
   } else {
     aviso.hidden = true;
@@ -161,7 +187,11 @@ function celulaCsv(valor) {
 }
 
 function exportarCsv() {
-  if (!ultimoResultado || ultimoResultado.dados.length === 0) return;
+  if (!ultimoResultado || botaoCsv.disabled) return;
+  if (lerFiltros().toString() !== filtrosDoResultado) {
+    invalidarResultado();
+    return;
+  }
 
   const cabecalho = ['ID', 'Título', 'Tipo de ataque', 'Sistema afetado', 'Prioridade', 'Status', 'Data da ocorrência', 'Data da resolução'];
   const linhas = ultimoResultado.dados.map(i => [
@@ -184,6 +214,8 @@ function exportarCsv() {
 
 // ---------- Eventos ----------
 
+form.addEventListener('input', invalidarResultado);
+form.addEventListener('change', invalidarResultado);
 form.addEventListener('submit', (e) => { e.preventDefault(); gerarRelatorio(); });
 
 document.getElementById('btn-limpar').addEventListener('click', () => {
@@ -191,7 +223,12 @@ document.getElementById('btn-limpar').addEventListener('click', () => {
   gerarRelatorio();
 });
 
-document.getElementById('btn-csv').addEventListener('click', exportarCsv);
+botaoCsv.addEventListener('click', exportarCsv);
+document.getElementById('chartjs-cdn').addEventListener('load', () => {
+  if (ultimoResultado) desenharGraficos(ultimoResultado);
+});
 
 // Ao abrir a tela, já gera o relatório com todos os dados
-carregarOpcoes().then(gerarRelatorio);
+carregarOpcoes().then(() => {
+  if (numeroDaConsulta === 0 && !voltandoAoLogin) gerarRelatorio();
+});

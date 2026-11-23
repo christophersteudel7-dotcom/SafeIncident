@@ -1,11 +1,11 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../helpers/util.php';
 
 exigirLogin();
 exigirMetodo('GET');
 
 try {
+    $pdo = conectarBanco();
     // Sem filtros: o dashboard mostra a situação geral (só não conta os excluídos)
     [$where, $valores] = montarFiltros([]);
 

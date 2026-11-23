@@ -1,12 +1,14 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../helpers/util.php';
 
 exigirLogin();
 exigirMetodo('POST');
 
+$dados = lerJson();
+
 try {
-    $campos = validarIncidente(lerJson(), $pdo);
+    $pdo = conectarBanco();
+    $campos = validarIncidente($dados, $pdo);
 
     // Quem registrou vem da SESSÃO (não do formulário), então não dá para forjar.
     // Status começa 'Pendente' e data_criacao é preenchida pelo próprio MySQL.

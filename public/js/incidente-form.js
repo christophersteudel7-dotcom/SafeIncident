@@ -2,12 +2,14 @@
 
 const idEdicao = new URLSearchParams(window.location.search).get('id');
 const editando = idEdicao !== null;
+let idConfirmado = null; // Preenchido quando a API encontra o incidente para edição.
 
 const form = document.getElementById('form-incidente');
 const botaoSalvar = document.getElementById('btn-salvar');
 const CAMPOS = ['titulo', 'id_tipo', 'prioridade', 'sistema_afetado', 'data_ocorrencia', 'descricao'];
 
 // Data da ocorrência não pode ser no futuro
+document.getElementById('data_ocorrencia').min = '1000-01-01';
 document.getElementById('data_ocorrencia').max = dataDeHoje();
 
 // ---------- Validação no navegador (a validação de verdade é refeita no PHP) ----------
@@ -25,6 +27,7 @@ function validar(d) {
   if (!d.prioridade) erros.prioridade = 'Selecione a prioridade.';
   if (d.sistema_afetado.length < 2 || d.sistema_afetado.length > 100) erros.sistema_afetado = 'Informe o sistema afetado (2 a 100 caracteres).';
   if (!d.data_ocorrencia) erros.data_ocorrencia = 'Informe a data da ocorrência.';
+  else if (!/^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}$/.test(d.data_ocorrencia)) erros.data_ocorrencia = 'Informe uma data entre os anos 1000 e 9999.';
   else if (d.data_ocorrencia > dataDeHoje()) erros.data_ocorrencia = 'A data não pode ser futura.';
   if (d.descricao.length < 10) erros.descricao = 'Descreva o incidente com pelo menos 10 caracteres.';
   return erros;
@@ -59,6 +62,7 @@ async function carregarTipos() {
 
 async function carregarIncidente() {
   const i = await chamarApi('../api/incidentes/detalhes.php?id=' + encodeURIComponent(idEdicao));
+  idConfirmado = Number(i.id_incidente);
   document.getElementById('titulo').value = i.titulo;
   document.getElementById('id_tipo').value = i.id_tipo;
   document.getElementById('prioridade').value = i.prioridade;
@@ -106,7 +110,10 @@ form.addEventListener('submit', async (evento) => {
   mostrarErros(erros);
   if (Object.keys(erros).length > 0) return;
 
-  if (editando) dados.id_incidente = Number(idEdicao);
+  if (editando) {
+    if (idConfirmado === null) return; // Aguarda a ficha antes de permitir salvar.
+    dados.id_incidente = idConfirmado;
+  }
 
   botaoSalvar.disabled = true;
   botaoSalvar.textContent = 'Salvando...';

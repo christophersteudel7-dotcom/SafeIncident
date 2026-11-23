@@ -12,7 +12,7 @@
   <main class="conteudo">
     <header class="pagina-cabecalho">
       <h1>Relatórios</h1>
-      <p>Analise os incidentes aplicando filtros. Resumo, gráficos e tabela usam o mesmo conjunto de registros.</p>
+      <p>Resumo e gráficos incluem todos os incidentes filtrados. A tabela e o CSV trazem até 1.000 linhas.</p>
     </header>
 
     <form id="form-filtros" class="card" style="margin-bottom:16px;">
@@ -46,11 +46,11 @@
         </div>
         <div>
           <label for="f-inicio">Ocorrência a partir de</label>
-          <input type="date" id="f-inicio">
+          <input type="date" id="f-inicio" min="1000-01-01" max="9999-12-31">
         </div>
         <div>
           <label for="f-fim">Ocorrência até</label>
-          <input type="date" id="f-fim">
+          <input type="date" id="f-fim" min="1000-01-01" max="9999-12-31">
         </div>
         <div class="acoes">
           <button type="submit" class="btn btn-primario" id="btn-gerar">Gerar relatório</button>
@@ -58,6 +58,7 @@
         </div>
       </div>
       <p class="erro-campo" id="erro-filtros" hidden></p>
+      <p class="texto-suave" id="instrucao-filtros" role="status" hidden>Filtros alterados. Gere o relatório para atualizar a tabela e o CSV.</p>
     </form>
 
     <div id="carregando" class="estado"><div class="spinner"></div>Gerando relatório...</div>
@@ -83,7 +84,7 @@
       <section class="card">
         <div class="cabecalho-linha" style="margin-bottom:12px;">
           <h2 style="margin:0;">Resultados</h2>
-          <button type="button" class="btn btn-secundario btn-pequeno" id="btn-csv">Exportar CSV</button>
+          <button type="button" class="btn btn-secundario btn-pequeno" id="btn-csv" disabled>Exportar CSV (0 linhas)</button>
         </div>
         <div class="tabela-container">
           <table>
@@ -98,7 +99,10 @@
     </div>
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script id="chartjs-cdn" async
+          src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
+          integrity="sha512-CQBWl4fJHWbryGE+Pc7UAxWMUMNMWzWxF4SQo9CgkJIN1kx6djDQZjh3Y8SZ1d+6I+1zze6Z7kHXO7q3UyZAWw=="
+          crossorigin="anonymous"></script>
   <script src="js/utils.js"></script>
   <script src="js/relatorios.js"></script>
   <script src="js/layout.js"></script>

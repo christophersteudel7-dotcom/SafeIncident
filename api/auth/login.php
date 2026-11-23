@@ -1,39 +1,39 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../helpers/auth_helper.php';
+require_once __DIR__ . '/../helpers/util.php';
 
-iniciarSessao();
+exigirMetodo('POST');
+$dados = lerJson();
+$email = param($dados, 'email');
+$senha = $dados['senha'] ?? null; // Mantém os espaços da senha.
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    responderJson(['erro' => 'Método não permitido'], 405);
-}
-
-// Lê o JSON enviado pelo JavaScript
-$dados = json_decode(file_get_contents('php://input'), true);
-$email = trim($dados['email'] ?? '');
-$senha = $dados['senha'] ?? '';
-
-// Validação no servidor (nunca confie só na validação do navegador)
-if ($email === '' || $senha === '') {
+if (!is_string($senha) || $senha === '' || $email === '') {
     responderJson(['erro' => 'Preencha e-mail e senha'], 400);
 }
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+if (strpos($senha, "\0") !== false) {
+    responderJson(['erro' => 'Senha inválida'], 400);
+}
+if (strlen($email) > 150 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     responderJson(['erro' => 'E-mail inválido'], 400);
 }
 
-// Prepared statement: o "?" recebe o valor separado do SQL
-$stmt = $pdo->prepare('SELECT id_usuario, nome, senha_hash FROM usuarios WHERE email = ?');
-$stmt->execute([$email]);
-$usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+// O login consulta o banco para verificar as credenciais. A sessão é autenticada depois.
+try {
+    $pdo = conectarBanco();
+    $stmt = $pdo->prepare('SELECT id_usuario, nome, senha_hash FROM usuarios WHERE email = ?');
+    $stmt->execute([$email]);
+    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    erroInterno($e);
+}
 
-// Mesma mensagem para "e-mail não existe" e "senha errada"
 if (!$usuario || !password_verify($senha, $usuario['senha_hash'])) {
     responderJson(['erro' => 'E-mail ou senha inválidos'], 401);
 }
 
-// Login válido: gera novo id de sessão e guarda quem está logado
+iniciarSessao();
 session_regenerate_id(true);
 $_SESSION['id_usuario'] = $usuario['id_usuario'];
 $_SESSION['nome'] = $usuario['nome'];
+$_SESSION['ultima_atividade'] = time();
 
 responderJson(['sucesso' => true, 'nome' => $usuario['nome']]);

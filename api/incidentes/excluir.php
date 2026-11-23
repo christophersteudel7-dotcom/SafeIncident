@@ -1,17 +1,14 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../helpers/util.php';
 
 exigirLogin();
 exigirMetodo('POST');
 
 $dados = lerJson();
-$id = (int) ($dados['id_incidente'] ?? 0);
-if ($id <= 0) {
-    responderJson(['erro' => 'Identificador inválido'], 400);
-}
+$id = idPositivo($dados['id_incidente'] ?? null);
 
 try {
+    $pdo = conectarBanco();
     buscarIncidenteAtivo($pdo, $id);
 
     // Exclusão LÓGICA: o registro continua no banco, só ganha a data da exclusão.

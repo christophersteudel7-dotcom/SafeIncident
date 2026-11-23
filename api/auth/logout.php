@@ -1,8 +1,9 @@
 <?php
-require_once __DIR__ . '/../helpers/auth_helper.php';
+require_once __DIR__ . '/../helpers/util.php';
 
+exigirMetodo('POST');
+lerJson(); // O botão Sair envia o objeto vazio {} com o cabeçalho da aplicação.
 iniciarSessao();
-$_SESSION = [];
-session_destroy();
+encerrarSessao();
 
 responderJson(['sucesso' => true]);

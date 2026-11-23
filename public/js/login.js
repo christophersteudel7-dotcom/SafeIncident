@@ -21,7 +21,7 @@ form.addEventListener('submit', async (evento) => {
   try {
     const resposta = await fetch('../api/auth/login.php', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-SafeIncident': '1' },
       body: JSON.stringify({ email, senha })
     });
     const dados = await resposta.json();

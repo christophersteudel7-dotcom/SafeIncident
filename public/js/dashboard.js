@@ -19,17 +19,12 @@ async function carregarDashboard() {
     document.getElementById('ind-resolvidos').textContent = r.resolvidos;
     document.getElementById('ind-tempo').textContent = formatarTempo(r.tempo_medio_horas);
 
-    desenharGrafico('grafico-tipo', 'doughnut',
-      r.por_tipo.map(l => l.nome),
-      r.por_tipo.map(l => l.total),
-      PALETA);
-
-    desenharGrafico('grafico-prioridade', 'bar',
-      r.por_prioridade.map(l => rotulo(l.prioridade)),
-      r.por_prioridade.map(l => l.total),
-      CORES_PRIORIDADE, false);
-
     desenharRecentes(r.recentes);
+    desenharGraficosDashboard(r);
+    // Se a CDN chegar depois dos dados, troca o texto pelos gráficos.
+    if (typeof Chart !== 'function') {
+      document.getElementById('chartjs-cdn').addEventListener('load', () => desenharGraficosDashboard(r), { once: true });
+    }
   } catch (erro) {
     document.getElementById('carregando').hidden = true;
     const caixa = document.getElementById('erro');
@@ -37,6 +32,18 @@ async function carregarDashboard() {
     caixa.appendChild(criarEstado('Não foi possível carregar o dashboard', erro.message, 'estado-erro'));
     caixa.hidden = false;
   }
+}
+
+function desenharGraficosDashboard(r) {
+  desenharGrafico('grafico-tipo', 'doughnut',
+    r.por_tipo.map(l => l.nome),
+    r.por_tipo.map(l => l.total),
+    PALETA);
+
+  desenharGrafico('grafico-prioridade', 'bar',
+    r.por_prioridade.map(l => rotulo(l.prioridade)),
+    r.por_prioridade.map(l => l.total),
+    CORES_PRIORIDADE, false);
 }
 
 function desenharRecentes(lista) {

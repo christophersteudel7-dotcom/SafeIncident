@@ -2,6 +2,8 @@
 // Funções auxiliares compartilhadas pelos endpoints do SafeIncident.
 require_once __DIR__ . '/auth_helper.php';
 
+// Um aviso do driver não deve aparecer antes da resposta JSON no XAMPP.
+ini_set('display_errors', '0');
 date_default_timezone_set('America/Sao_Paulo');
 
 // Valores permitidos (iguais aos ENUM do banco)
@@ -11,17 +13,26 @@ const STATUS_VALIDOS = ['Pendente', 'Em andamento', 'Resolvido'];
 // Garante que o endpoint só aceita o método HTTP esperado (GET ou POST)
 function exigirMetodo($metodo) {
     if ($_SERVER['REQUEST_METHOD'] !== $metodo) {
+        header('Allow: ' . $metodo);
         responderJson(['erro' => 'Método não permitido'], 405);
     }
 }
 
-// Lê o corpo JSON enviado pelo JavaScript
+// As escritas da interface enviam JSON e o mesmo cabeçalho. O CORS fica na mesma origem.
 function lerJson() {
-    $dados = json_decode(file_get_contents('php://input'), true);
-    if (!is_array($dados)) {
-        responderJson(['erro' => 'Requisição inválida'], 400);
+    $tipo = strtolower(trim(explode(';', $_SERVER['CONTENT_TYPE'] ?? '')[0]));
+    if ($tipo !== 'application/json') {
+        responderJson(['erro' => 'Envie application/json'], 415);
     }
-    return $dados;
+    if (($_SERVER['HTTP_X_SAFEINCIDENT'] ?? '') !== '1') {
+        responderJson(['erro' => 'Cabeçalho da aplicação inválido'], 403);
+    }
+
+    $objeto = json_decode(file_get_contents('php://input'));
+    if (!is_object($objeto)) {
+        responderJson(['erro' => 'Envie um objeto JSON válido'], 400);
+    }
+    return get_object_vars($objeto);
 }
 
 // Erro de banco: registra no log do servidor e responde sem revelar detalhes
@@ -30,10 +41,45 @@ function erroInterno($e) {
     responderJson(['erro' => 'Erro interno do servidor'], 500);
 }
 
-// Lê um parâmetro como texto limpo (ignora valores estranhos, como arrays)
+// Chame dentro do try do endpoint, após a sessão e as validações que dispensam o banco.
+function conectarBanco() {
+    $arquivo = __DIR__ . '/../config/database.php';
+    if (!is_readable($arquivo)) {
+        erroInterno(new RuntimeException('Configuração local do banco ausente ou ilegível'));
+    }
+    require $arquivo; // Define $host, $port, $dbname, $usuario e $senha nesta função.
+    $dsn = "mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4";
+    return new PDO($dsn, $usuario, $senha, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+}
+
+// Campo opcional ausente equivale a texto vazio. Um valor informado deve ser texto.
 function param($origem, $chave) {
-    $valor = $origem[$chave] ?? '';
-    return is_string($valor) ? trim($valor) : '';
+    if (!array_key_exists($chave, $origem)) return '';
+    if (!is_string($origem[$chave])) {
+        responderJson(['erro' => 'Campo de texto inválido'], 400);
+    }
+    return trim($origem[$chave]);
+}
+
+// Aceita um inteiro JSON ou uma sequência de dígitos vinda da URL ou do formulário.
+function idPositivo($valor) {
+    if ((is_int($valor) || is_string($valor)) && ctype_digit((string) $valor)) {
+        $texto = ltrim((string) $valor, '0'); // Mantém válidos os links com zeros à esquerda.
+        $opcoes = ['options' => ['min_range' => 1, 'max_range' => 2147483647]];
+        $id = filter_var($texto, FILTER_VALIDATE_INT, $opcoes);
+        if ($id !== false) return $id;
+    }
+    responderJson(['erro' => 'Identificador inválido'], 400);
+}
+
+// A lista ajusta páginas numéricas fora do intervalo, mas rejeita texto malformado.
+function numeroDePagina($get, $chave, $padrao) {
+    if (!array_key_exists($chave, $get)) return $padrao;
+    $texto = param($get, $chave);
+    if (!preg_match('/\A[+-]?[0-9]+\z/', $texto)) {
+        responderJson(['erro' => 'Paginação inválida'], 400);
+    }
+    return max(1, (int) $texto);
 }
 
 // Conta caracteres (e não bytes), para "é" valer 1. Usa mbstring se existir.
@@ -46,8 +92,10 @@ function tamanhoTexto($texto) {
 
 // Confere se o texto é uma data real no formato AAAA-MM-DD
 function dataValida($texto) {
-    $d = DateTime::createFromFormat('Y-m-d', $texto);
-    return $d && $d->format('Y-m-d') === $texto;
+    if (!preg_match('/\A([1-9][0-9]{3})-([0-9]{2})-([0-9]{2})\z/', $texto, $partes)) {
+        return false;
+    }
+    return checkdate((int) $partes[2], (int) $partes[3], (int) $partes[1]);
 }
 
 // Valida os campos de um incidente (usado no cadastro e na edição)
@@ -58,7 +106,7 @@ function validarIncidente($dados, $pdo) {
     $descricao = param($dados, 'descricao');
     $prioridade = param($dados, 'prioridade');
     $dataOcorrencia = param($dados, 'data_ocorrencia');
-    $idTipo = (int) ($dados['id_tipo'] ?? 0);
+    $idTipo = idPositivo($dados['id_tipo'] ?? null);
 
     if (tamanhoTexto($titulo) < 3 || tamanhoTexto($titulo) > 150) {
         responderJson(['erro' => 'O título deve ter entre 3 e 150 caracteres'], 400);
@@ -111,7 +159,7 @@ function buscarIncidenteAtivo($pdo, $id) {
 // (prepared statements), então nada digitado pelo usuário vira comando SQL.
 function montarFiltros($get) {
     // REGRA DO PROJETO: incidente excluído (exclusão lógica) nunca aparece.
-    // Toda consulta de leitura passa por aqui, então o filtro fica em um único lugar.
+    // Lista, dashboard e relatório usam este filtro. Detalhes e sistemas filtram diretamente.
     $where = ['i.excluido_em IS NULL'];
     $valores = [];
 
@@ -122,8 +170,8 @@ function montarFiltros($get) {
         array_push($valores, $like, $like, $like);
     }
 
-    $idTipo = (int) param($get, 'id_tipo');
-    if ($idTipo > 0) {
+    if (array_key_exists('id_tipo', $get) && $get['id_tipo'] !== '') {
+        $idTipo = idPositivo($get['id_tipo']);
         $where[] = 'i.id_tipo = ?';
         $valores[] = $idTipo;
     }

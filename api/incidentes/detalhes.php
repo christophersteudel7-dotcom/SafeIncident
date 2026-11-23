@@ -1,16 +1,13 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../helpers/util.php';
 
 exigirLogin();
 exigirMetodo('GET');
 
-$id = (int) ($_GET['id'] ?? 0);
-if ($id <= 0) {
-    responderJson(['erro' => 'Identificador inválido'], 400);
-}
+$id = idPositivo($_GET['id'] ?? null);
 
 try {
+    $pdo = conectarBanco();
     $sql = "SELECT i.id_incidente, i.titulo, i.id_tipo, t.nome AS tipo, i.sistema_afetado,
                    i.prioridade, i.descricao, i.data_ocorrencia, i.data_criacao,
                    i.data_resolucao, i.status, u.nome AS registrado_por
